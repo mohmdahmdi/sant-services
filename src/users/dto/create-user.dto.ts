@@ -3,7 +3,6 @@ import {
   IsOptional,
   IsString,
   Length,
-  IsIn,
   IsDateString,
 } from 'class-validator';
 
@@ -31,10 +30,6 @@ export class CreateUserDto {
   @IsOptional()
   @IsDateString()
   birth_date?: string;
-
-  @IsOptional()
-  @IsIn(['customer', 'beautician', 'admin'])
-  role?: 'customer' | 'beautician' | 'admin';
 
   @IsOptional()
   @IsString()
