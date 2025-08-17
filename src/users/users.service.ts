@@ -177,7 +177,18 @@ export class UsersService {
     return `This action updates a #${id} user`;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} user`;
+  async remove(id: string) {
+    try {
+      const result = await this.pool.query(`DELETE FROM users WHERE id = $1`, [
+        id,
+      ]);
+
+      if (result.rowCount === 0) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+    } catch (error) {
+      console.error('Database error in UsersService.remove:', error);
+      throw new InternalServerErrorException('Failed to delete user');
+    }
   }
 }
