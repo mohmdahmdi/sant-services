@@ -12,7 +12,6 @@ import { User } from './entities/user.entity';
 import { validate as isUUID } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { isEmail } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UsersService {
@@ -102,9 +101,7 @@ export class UsersService {
       return null;
     }
 
-    return plainToInstance(User, result.rows[0], {
-      excludeExtraneousValues: true,
-    });
+    return new User(result.rows[0] as User);
   }
 
   async findByNumber(number: string) {
@@ -118,9 +115,7 @@ export class UsersService {
         return null;
       }
 
-      return plainToInstance(User, result.rows[0], {
-        excludeExtraneousValues: true,
-      });
+      return new User(result.rows[0] as User);
     } catch (error) {
       console.error('Database error in UsersService.findByNumber:', error);
       throw new InternalServerErrorException('Failed to fetch user');
@@ -128,21 +123,43 @@ export class UsersService {
   }
 
   async addRole(userId: string, roleName: string) {
-    const roleRes: QueryResult<{ id: number; name: string }> =
-      await this.pool.query(`SELECT id FROM roles WHERE name = $1 LIMIT 1`, [
-        roleName,
-      ]);
+    const userRes: QueryResult<{ id: string }> = await this.pool.query(
+      `SELECT id FROM users WHERE id = $1 LIMIT 1`,
+      [userId],
+    );
+    if (!userRes.rows.length) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+
+    const roleRes: QueryResult<{ id: string; name: string }> =
+      await this.pool.query(
+        `SELECT id, name FROM roles WHERE name = $1 LIMIT 1`,
+        [roleName],
+      );
     if (!roleRes.rows.length) {
-      throw new Error(`Role ${roleName} not found`);
+      throw new NotFoundException(`Role "${roleName}" not found`);
     }
     const roleId = roleRes.rows[0].id;
 
-    await this.pool.query(
-      `INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    const result = await this.pool.query(
+      `
+    INSERT INTO user_roles (user_id, role_id) 
+    VALUES ($1, $2) 
+    ON CONFLICT DO NOTHING
+    RETURNING user_id, role_id
+    `,
       [userId, roleId],
     );
 
-    return { userId, role: roleName };
+    if (!result.rows.length) {
+      throw new BadRequestException(`User already has the role "${roleName}"`);
+    }
+
+    return {
+      userId,
+      roleId,
+      roleName,
+    };
   }
 
   async getUserRoles(identifier: string) {
@@ -165,7 +182,7 @@ export class UsersService {
       FROM roles r
       JOIN user_roles ur ON r.id = ur.role_id
       JOIN users u ON ur.user_id = u.id
-      WHERE u.number = $1;
+      WHERE u.phone = $1;
     `,
       [identifier],
     );
@@ -174,23 +191,40 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
-      const fields = Object.keys(updateUserDto);
+      // Filter out undefined fields
+      const fields = Object.keys(updateUserDto).filter(
+        (key) => updateUserDto[key] !== undefined,
+      );
+
       if (fields.length === 0) {
         throw new InternalServerErrorException('No fields provided for update');
       }
 
-      const values = Object.values(updateUserDto);
+      const values: any[] = [];
+
+      for (const field of fields) {
+        if (field === 'password') {
+          const hashed = await bcrypt.hash(updateUserDto.password!, 10);
+          values.push(hashed);
+        } else {
+          values.push(updateUserDto[field]);
+        }
+      }
 
       const setClause = fields
-        .map((field, index) => `${field} = ${index + 1}`)
+        .map((field, index) =>
+          field === 'password'
+            ? `password_hash = $${index + 1}`
+            : `${field} = $${index + 1}`,
+        )
         .join(', ');
 
       const query = `
-        UPDATE users
-        SET ${setClause}
-        WHERE id = $${fields.length + 1}
-        RETURNING *;
-      `;
+      UPDATE users
+      SET ${setClause}
+      WHERE id = $${fields.length + 1}
+      RETURNING *;
+    `;
 
       const result = await this.pool.query(query, [...values, id]);
 
@@ -199,8 +233,9 @@ export class UsersService {
       }
 
       return result.rows[0] as User;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Database error in UsersService.update:', error);
+
       throw new InternalServerErrorException('Failed to update user');
     }
   }
