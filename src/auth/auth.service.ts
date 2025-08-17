@@ -4,6 +4,7 @@ import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { isEmail } from 'class-validator';
 
 @Injectable()
 export class AuthService {
@@ -18,7 +19,12 @@ export class AuthService {
   }
 
   async validateUser(identifier: string, password: string) {
-    const user = await this.usersService.findByNumber(identifier);
+    let user: User;
+    if (isEmail(identifier)) {
+      user = await this.usersService.findByEmail(identifier);
+    } else {
+      user = await this.usersService.findByNumber(identifier);
+    }
     if (user && (await bcrypt.compare(password, user.password_hash))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password_hash, ...result } = user;
