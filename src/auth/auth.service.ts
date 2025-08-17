@@ -15,7 +15,24 @@ export class AuthService {
 
   async register(userData: CreateUserDto) {
     const user = await this.usersService.create(userData);
-    return new User(user);
+
+    const roles = await this.usersService.getUserRoles(user.id);
+
+    const payload = {
+      sub: user.id,
+      identifier: user.email || user.phone,
+      roles,
+    };
+
+    const access_token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: '1h',
+    });
+
+    return {
+      user,
+      access_token,
+    };
   }
 
   async validateUser(identifier: string, password: string) {
