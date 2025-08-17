@@ -17,8 +17,8 @@ export class AuthService {
     return new User(user);
   }
 
-  async validateUserByEmail(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
+  async validateUser(identifier: string, password: string) {
+    const user = await this.usersService.findByNumber(identifier);
     if (user && (await bcrypt.compare(password, user.password_hash))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password_hash, ...result } = user;
@@ -27,43 +27,23 @@ export class AuthService {
     return null;
   }
 
-  async validateUserByNumber(number: string, password: string) {
-    const user = await this.usersService.findByNumber(number);
-    if (user && (await bcrypt.compare(password, user.password_hash))) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, ...result } = user;
-      return result;
-    }
-    return null;
-  }
-
-  async loginByNumber(number: string, password: string) {
-    const user = await this.validateUserByNumber(number, password);
+  async login(identifier: string, password: string) {
+    const user = await this.validateUser(identifier, password);
     if (!user) throw new UnauthorizedException();
+
+    const roles = await this.usersService.getUserRoles(user.id);
 
     const payload = {
       sub: user.id,
-      number: user.phone,
-      roles: this.usersService.getUserRolesByNumber(number),
+      identifier,
+      roles,
     };
 
     return {
-      access_token: this.jwtService.sign(payload),
-    };
-  }
-
-  async loginByEmail(email: string, password: string) {
-    const user = await this.validateUserByEmail(email, password);
-    if (!user) throw new UnauthorizedException();
-
-    const payload = {
-      sub: user.id,
-      email: user.phone,
-      roles: this.usersService.getUserRolesByNumber(email),
-    };
-
-    return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        secret: process.env.JWT_SECRET,
+        expiresIn: '1h',
+      }),
     };
   }
 }
