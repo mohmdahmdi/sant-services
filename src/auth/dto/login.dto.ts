@@ -9,5 +9,6 @@ export class LoginDto {
   @IsOptional()
   number?: string;
 
+  @IsString()
   password: string;
 }
