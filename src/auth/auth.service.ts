@@ -19,7 +19,7 @@ export class AuthService {
   }
 
   async validateUser(identifier: string, password: string) {
-    let user: User;
+    let user: User | null;
     if (isEmail(identifier)) {
       user = await this.usersService.findByEmail(identifier);
     } else {

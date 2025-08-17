@@ -29,8 +29,8 @@ export class UsersService {
 
       const result = await this.pool.query(
         `
-        INSERT INTO users (full_name, email, phone, password_hash, gender, birth_date, role, profile_picture, bio)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        INSERT INTO users (full_name, email, phone, password_hash, gender, birth_date, profile_picture, bio)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
         `,
         [
@@ -40,7 +40,6 @@ export class UsersService {
           hashedPassword,
           createUserDto.gender ?? null,
           createUserDto.birth_date ?? null,
-          createUserDto.role ?? 'customer',
           createUserDto.profile_picture ?? null,
           createUserDto.bio ?? null,
         ],
@@ -100,7 +99,7 @@ export class UsersService {
     );
 
     if (!result.rows.length) {
-      throw new NotFoundException(`User with email ${email} not found`);
+      return null;
     }
 
     return plainToInstance(User, result.rows[0], {
@@ -116,7 +115,7 @@ export class UsersService {
       );
 
       if (!result.rows.length) {
-        throw new NotFoundException(`User with number ${number} not found`);
+        return null;
       }
 
       return plainToInstance(User, result.rows[0], {
@@ -173,8 +172,37 @@ export class UsersService {
     return roles.rows.map((row) => row.name);
   }
 
-  update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    try {
+      const fields = Object.keys(updateUserDto);
+      if (fields.length === 0) {
+        throw new InternalServerErrorException('No fields provided for update');
+      }
+
+      const values = Object.values(updateUserDto);
+
+      const setClause = fields
+        .map((field, index) => `${field} = ${index + 1}`)
+        .join(', ');
+
+      const query = `
+        UPDATE users
+        SET ${setClause}
+        WHERE id = $${fields.length + 1}
+        RETURNING *;
+      `;
+
+      const result = await this.pool.query(query, [...values, id]);
+
+      if (result.rows.length === 0) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      return result.rows[0] as User;
+    } catch (error) {
+      console.error('Database error in UsersService.update:', error);
+      throw new InternalServerErrorException('Failed to update user');
+    }
   }
 
   async remove(id: string) {
