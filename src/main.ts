@@ -1,9 +1,19 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  const config = new DocumentBuilder()
+    .setTitle('santal-service')
+    .setDescription('api developement for santal')
+    .setVersion('1.0')
+    .addTag('sant')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('documentation', app, documentFactory);
 
   app.useGlobalPipes(
     new ValidationPipe({
