@@ -7,6 +7,7 @@ import { DatabaseModule } from './database/database.module';
 import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BusinessModule } from './business/business.module';
 
 @Module({
   providers: [AppService],
@@ -18,6 +19,7 @@ import { AppService } from './app.service';
     DatabaseModule,
     UsersModule,
     AuthModule,
+    BusinessModule,
   ],
   controllers: [AppController],
 })
