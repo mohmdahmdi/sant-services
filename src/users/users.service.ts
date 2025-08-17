@@ -94,23 +94,18 @@ export class UsersService {
       throw new BadRequestException('Invalid email address');
     }
 
-    try {
-      const result = await this.pool.query(
-        `SELECT * FROM users WHERE email = $1`,
-        [email],
-      );
+    const result = await this.pool.query(
+      `SELECT * FROM users WHERE email = $1`,
+      [email],
+    );
 
-      if (!result.rows.length) {
-        throw new NotFoundException(`User with email ${email} not found`);
-      }
-
-      return plainToInstance(User, result.rows[0], {
-        excludeExtraneousValues: true,
-      });
-    } catch (error) {
-      console.error('Database error in UsersService.findByEmail:', error);
-      throw new InternalServerErrorException('Failed to fetch user');
+    if (!result.rows.length) {
+      throw new NotFoundException(`User with email ${email} not found`);
     }
+
+    return plainToInstance(User, result.rows[0], {
+      excludeExtraneousValues: true,
+    });
   }
 
   async findByNumber(number: string) {
@@ -151,7 +146,20 @@ export class UsersService {
     return { userId, role: roleName };
   }
 
-  async getUserRolesByNumber(number: string) {
+  async getUserRoles(identifier: string) {
+    if (isEmail(identifier)) {
+      const roles: QueryResult<{ name: string }> = await this.pool.query(
+        `
+      SELECT r.name
+      FROM roles r
+      JOIN user_roles ur ON r.id = ur.role_id
+      JOIN users u ON ur.user_id = u.id
+      WHERE u.email = $1;
+    `,
+        [identifier],
+      );
+      return roles.rows.map((row) => row.name);
+    }
     const roles: QueryResult<{ name: string }> = await this.pool.query(
       `
       SELECT r.name
@@ -160,21 +168,7 @@ export class UsersService {
       JOIN users u ON ur.user_id = u.id
       WHERE u.number = $1;
     `,
-      [number],
-    );
-    return roles.rows.map((row) => row.name);
-  }
-
-  async getUserRolesByEmail(email: string) {
-    const roles: QueryResult<{ name: string }> = await this.pool.query(
-      `
-      SELECT r.name
-      FROM roles r
-      JOIN user_roles ur ON r.id = ur.role_id
-      JOIN users u ON ur.user_id = u.id
-      WHERE u.email = $1;
-    `,
-      [email],
+      [identifier],
     );
     return roles.rows.map((row) => row.name);
   }
