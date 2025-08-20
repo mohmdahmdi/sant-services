@@ -9,6 +9,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BusinessModule } from './business/business.module';
 import { BeauticiansModule } from './beauticians/beauticians.module';
+import { AppointmentsModule } from './appointments/appointments.module';
 
 @Module({
   providers: [AppService],
@@ -22,6 +23,7 @@ import { BeauticiansModule } from './beauticians/beauticians.module';
     AuthModule,
     BusinessModule,
     BeauticiansModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
 })
