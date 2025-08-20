@@ -1,34 +1,52 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+// src/appointments/appointments.controller.ts
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+} from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { Appointment } from './entities/appointment.entity';
 
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(private readonly service: AppointmentsService) {}
 
   @Post()
-  create(@Body() createAppointmentDto: CreateAppointmentDto) {
-    return this.appointmentsService.create(createAppointmentDto);
+  create(@Body() dto: CreateAppointmentDto): Promise<Appointment> {
+    return this.service.create(dto);
   }
 
   @Get()
-  findAll() {
-    return this.appointmentsService.findAll();
+  findAll(): Promise<Appointment[]> {
+    return this.service.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.appointmentsService.findOne(+id);
+  findOne(@Param('id') id: string): Promise<Appointment> {
+    return this.service.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAppointmentDto: UpdateAppointmentDto) {
-    return this.appointmentsService.update(+id, updateAppointmentDto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateAppointmentDto,
+  ): Promise<Appointment> {
+    return this.service.update(id, dto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.appointmentsService.remove(+id);
+  remove(@Param('id') id: string): Promise<void> {
+    return this.service.remove(id);
+  }
+
+  @Get('search/:term')
+  search(@Param('term') term: string): Promise<Appointment[]> {
+    return this.service.search(term);
   }
 }
