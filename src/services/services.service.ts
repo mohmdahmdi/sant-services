@@ -1,26 +1,128 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+  Inject,
+} from '@nestjs/common';
+import { Pool } from 'pg';
+import { Service } from './entities/service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Injectable()
 export class ServicesService {
-  create(createServiceDto: CreateServiceDto) {
-    return 'This action adds a new service';
+  constructor(@Inject('PG_POOL') private pool: Pool) {}
+
+  async create(dto: CreateServiceDto): Promise<Service> {
+    try {
+      const query = `
+        INSERT INTO services 
+        (business_id, category_id, title, description, price, duration_minutes, image, gender_target, is_active)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        RETURNING *;
+      `;
+      const values = [
+        dto.business_id,
+        dto.category_id,
+        dto.title,
+        dto.description,
+        dto.price,
+        dto.duration_minutes,
+        dto.image || null,
+        dto.gender_target,
+        dto.is_active ?? true,
+      ];
+      const result = await this.pool.query<Service>(query, values);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating service:', error);
+      throw new InternalServerErrorException('Failed to create service');
+    }
   }
 
-  findAll() {
-    return `This action returns all services`;
+  async findAll(): Promise<Service[]> {
+    try {
+      const result = await this.pool.query<Service>('SELECT * FROM services');
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      throw new InternalServerErrorException('Failed to fetch services');
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} service`;
+  async findOne(id: string): Promise<Service> {
+    try {
+      const result = await this.pool.query<Service>(
+        'SELECT * FROM services WHERE id = $1',
+        [id],
+      );
+      if (!result.rows.length)
+        throw new NotFoundException(`Service with id ${id} not found`);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error fetching service:', error);
+      throw error instanceof NotFoundException
+        ? error
+        : new InternalServerErrorException();
+    }
   }
 
-  update(id: number, updateServiceDto: UpdateServiceDto) {
-    return `This action updates a #${id} service`;
+  async update(id: string, dto: UpdateServiceDto): Promise<Service> {
+    try {
+      const fields = Object.keys(dto);
+      if (!fields.length)
+        throw new InternalServerErrorException('No fields to update');
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      const values = fields.map((f) => dto[f]);
+      const setClause = fields.map((f, idx) => `${f} = $${idx + 1}`).join(', ');
+
+      const query = `
+        UPDATE services
+        SET ${setClause}
+        WHERE id = $${fields.length + 1}
+        RETURNING *;
+      `;
+      const result = await this.pool.query<Service>(query, [...values, id]);
+      if (!result.rows.length)
+        throw new NotFoundException(`Service with id ${id} not found`);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating service:', error);
+      throw error instanceof NotFoundException
+        ? error
+        : new InternalServerErrorException();
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} service`;
+  async remove(id: string): Promise<void> {
+    try {
+      const result = await this.pool.query(
+        'DELETE FROM services WHERE id = $1 RETURNING id',
+        [id],
+      );
+      if (!result.rows.length)
+        throw new NotFoundException(`Service with id ${id} not found`);
+    } catch (error) {
+      console.error('Error deleting service:', error);
+      throw error instanceof NotFoundException
+        ? error
+        : new InternalServerErrorException();
+    }
+  }
+
+  // Bonus: search services by title, category, or business
+  async search(term: string): Promise<Service[]> {
+    try {
+      const query = `
+        SELECT * FROM services
+        WHERE title ILIKE $1
+      `;
+      const result = await this.pool.query<Service>(query, [`%${term}%`]);
+      return result.rows;
+    } catch (error) {
+      console.error('Error searching services:', error);
+      throw new InternalServerErrorException('Failed to search services');
+    }
   }
 }
