@@ -10,6 +10,7 @@ import { AppService } from './app.service';
 import { BusinessModule } from './business/business.module';
 import { BeauticiansModule } from './beauticians/beauticians.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { ServicesModule } from './services/services.module';
 
 @Module({
   providers: [AppService],
@@ -24,6 +25,7 @@ import { AppointmentsModule } from './appointments/appointments.module';
     BusinessModule,
     BeauticiansModule,
     AppointmentsModule,
+    ServicesModule,
   ],
   controllers: [AppController],
 })
