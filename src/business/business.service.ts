@@ -3,6 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ConflictException,
+  Inject,
 } from '@nestjs/common';
 import { Pool } from 'pg';
 import { CreateBusinessDto } from './dto/create-business.dto';
@@ -11,7 +12,7 @@ import { Business } from './entities/business.entity';
 
 @Injectable()
 export class BusinessService {
-  constructor(private readonly pool: Pool) {}
+  constructor(@Inject('PG_POOL') private pool: Pool) {}
 
   async create(dto: CreateBusinessDto) {
     try {
