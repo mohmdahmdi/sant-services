@@ -39,4 +39,8 @@ export class Service {
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
+
+  constructor(partial: Partial<Service>) {
+    Object.assign(this, partial);
+  }
 }
