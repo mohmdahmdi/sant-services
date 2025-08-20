@@ -57,9 +57,6 @@ export class BusinessService {
     }
   }
 
-  /**
-   * Get all businesses
-   */
   async findAll() {
     try {
       const result = await this.pool.query(
@@ -72,9 +69,6 @@ export class BusinessService {
     }
   }
 
-  /**
-   * Get one business by id
-   */
   async findOne(id: string) {
     try {
       const result = await this.pool.query(
@@ -95,9 +89,6 @@ export class BusinessService {
     }
   }
 
-  /**
-   * Update a business
-   */
   async update(id: string, dto: UpdateBusinessDto) {
     try {
       const fields = Object.keys(dto);
@@ -137,9 +128,6 @@ export class BusinessService {
     }
   }
 
-  /**
-   * Delete a business
-   */
   async remove(id: string) {
     try {
       const result = await this.pool.query(
@@ -176,6 +164,21 @@ export class BusinessService {
     } catch (error) {
       console.error('Database error in BusinessService.search:', error);
       throw new InternalServerErrorException('Failed to search businesses');
+    }
+  }
+
+  async findByUserId(ownerId: string): Promise<Business[]> {
+    try {
+      const { rows } = await this.pool.query(
+        `SELECT * FROM "Businesses" WHERE owner_id = $1`,
+        [ownerId],
+      );
+      return rows as Business[];
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to fetch businesses for user ${ownerId}`,
+        error,
+      );
     }
   }
 }
