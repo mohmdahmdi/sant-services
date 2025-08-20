@@ -8,6 +8,7 @@ import { LoggerMiddleware } from './middlewares/logger.middleware';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { BusinessModule } from './business/business.module';
+import { BeauticiansModule } from './beauticians/beauticians.module';
 
 @Module({
   providers: [AppService],
@@ -20,6 +21,7 @@ import { BusinessModule } from './business/business.module';
     UsersModule,
     AuthModule,
     BusinessModule,
+    BeauticiansModule,
   ],
   controllers: [AppController],
 })
