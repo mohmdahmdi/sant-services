@@ -11,6 +11,7 @@ import { BusinessModule } from './business/business.module';
 import { BeauticiansModule } from './beauticians/beauticians.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ServicesModule } from './services/services.module';
+import { GeographicsModule } from './geographics/geographics.module';
 
 @Module({
   providers: [AppService],
@@ -26,6 +27,7 @@ import { ServicesModule } from './services/services.module';
     BeauticiansModule,
     AppointmentsModule,
     ServicesModule,
+    GeographicsModule,
   ],
   controllers: [AppController],
 })
