@@ -17,7 +17,6 @@ import { isEmail } from 'class-validator';
 export class UsersService {
   constructor(@Inject('PG_POOL') private pool: Pool) {}
   async create(createUserDto: CreateUserDto) {
-    try {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
@@ -45,10 +44,6 @@ export class UsersService {
       );
 
       return new User(result.rows[0] as User);
-    } catch (error) {
-      console.error('Database error in UsersService.create', error);
-      throw new InternalServerErrorException('Failed to create user');
-    }
   }
 
   async findAll() {

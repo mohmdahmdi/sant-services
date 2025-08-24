@@ -16,12 +16,10 @@ export class AuthService {
   async register(userData: CreateUserDto) {
     const user = await this.usersService.create(userData);
 
-    const roles = await this.usersService.getUserRoles(user.id);
-
     const payload = {
       sub: user.id,
       identifier: user.email || user.phone,
-      roles,
+      roles: ['user'],
     };
 
     const access_token = this.jwtService.sign(payload, {

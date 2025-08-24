@@ -107,7 +107,7 @@ export class BusinessService {
 
       const query = `
         UPDATE businesses
-        SET ${setClause}, updated_at = NOW()
+        SET ${setClause}
         WHERE id = $${fields.length + 1}
         RETURNING *;
       `;
@@ -171,11 +171,12 @@ export class BusinessService {
   async findByUserId(ownerId: string): Promise<Business[]> {
     try {
       const { rows } = await this.pool.query(
-        `SELECT * FROM "Businesses" WHERE owner_id = $1`,
+        `SELECT * FROM Businesses WHERE owner_id = $1`,
         [ownerId],
       );
       return rows as Business[];
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(
         `Failed to fetch businesses for user ${ownerId}`,
         error,
