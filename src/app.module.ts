@@ -12,6 +12,7 @@ import { BeauticiansModule } from './beauticians/beauticians.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ServicesModule } from './services/services.module';
 import { GeographicsModule } from './geographics/geographics.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   providers: [AppService],
@@ -28,6 +29,7 @@ import { GeographicsModule } from './geographics/geographics.module';
     AppointmentsModule,
     ServicesModule,
     GeographicsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
 })

@@ -131,4 +131,44 @@ export class BeauticiansService {
       throw new InternalServerErrorException('Failed to search beauticians');
     }
   }
+
+  async getTotalBeauticians() {
+    const data = await this.pool.query<{ total_beauticians: number }>(
+      `SELECT COUNT(*) AS total_beauticians FROM Beauticians;`,
+    );
+
+    return data.rows[0];
+  }
+
+  async getAverageRatingPerBeautician() {
+    const data = await this.pool.query<{
+      id: string;
+      full_name: string;
+      avg_rating: number;
+    }>(
+      `SELECT b.id, u.full_name, AVG(b.rating) AS avg_rating
+       FROM Beauticians b
+       JOIN Users u ON b.user_id = u.id
+       GROUP BY b.id, u.full_name;`,
+    );
+
+    return data.rows;
+  }
+
+  async getAppointmentsPerBeautician() {
+    const data = await this.pool.query<{
+      id: string;
+      full_name: string;
+      total_appointments: number;
+    }>(
+      `SELECT b.id, u.full_name, COUNT(a.id) AS total_appointments
+       FROM Beauticians b
+       JOIN Users u ON b.user_id = u.id
+       LEFT JOIN Appointments a ON a.beautician_id = b.id
+       GROUP BY b.id, u.full_name
+       ORDER BY total_appointments DESC;`,
+    );
+
+    return data.rows;
+  }
 }

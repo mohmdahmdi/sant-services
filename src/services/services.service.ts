@@ -125,4 +125,70 @@ export class ServicesService {
       throw new InternalServerErrorException('Failed to search services');
     }
   }
+
+  async getMostPopularServices(limit: number) {
+    const data = await this.pool.query<{
+      id: string;
+      title: string;
+      total_appointments: number;
+    }>(
+      `SELECT s.id, s.title, COUNT(a.id) AS total_appointments
+       FROM Services s
+       LEFT JOIN Appointments a ON a.service_id = s.id
+       GROUP BY s.id, s.title
+       ORDER BY total_appointments DESC
+       LIMIT ${limit};`,
+    );
+
+    return data.rows;
+  }
+
+  async getRevenuePerService() {
+    const data = await this.pool.query<{
+      id: string;
+      title: string;
+      total_revenue: number;
+    }>(
+      `SELECT s.id, s.title, SUM(s.price) AS total_revenue
+       FROM Services s
+       JOIN Appointments a ON a.service_id = s.id
+       WHERE a.payment_status = 'paid'
+       GROUP BY s.id, s.title
+       ORDER BY total_revenue DESC;`,
+    );
+
+    return data.rows;
+  }
+
+  async getServicesPerCategory() {
+    const data = await this.pool.query<{
+      category_name: string;
+      total_services: number;
+    }>(
+      `SELECT c.name AS category_name, COUNT(s.id) AS total_services
+       FROM ServiceCategories c
+       LEFT JOIN Services s ON s.category_id = c.id
+       GROUP BY c.name
+       ORDER BY total_services DESC;`,
+    );
+
+    return data.rows;
+  }
+
+  async getRevenuePerCategory() {
+    const data = await this.pool.query<{
+      category_name: string;
+      total_revenue: number;
+    }>(
+      `SELECT c.name AS category_name, SUM(s.price) AS total_revenue
+       FROM ServiceCategories c
+       JOIN Services s ON s.category_id = c.id
+       JOIN Appointments a ON a.service_id = s.id
+       WHERE a.payment_status = 'paid'
+       GROUP BY c.name
+       ORDER BY total_revenue DESC;`,
+    );
+
+    return data.rows;
+  }
 }

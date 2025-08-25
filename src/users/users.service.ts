@@ -17,33 +17,33 @@ import { isEmail } from 'class-validator';
 export class UsersService {
   constructor(@Inject('PG_POOL') private pool: Pool) {}
   async create(createUserDto: CreateUserDto) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-      const exist = await this.findByEmail(createUserDto.email);
-      if (exist) {
-        throw new BadRequestException('a user exist with this information');
-      }
+    const exist = await this.findByEmail(createUserDto.email);
+    if (exist) {
+      throw new BadRequestException('a user exist with this information');
+    }
 
-      const result = await this.pool.query(
-        `
+    const result = await this.pool.query(
+      `
         INSERT INTO users (full_name, email, phone, password_hash, gender, birth_date, profile_picture, bio)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
         `,
-        [
-          createUserDto.full_name,
-          createUserDto.email,
-          createUserDto.phone ?? null,
-          hashedPassword,
-          createUserDto.gender ?? null,
-          createUserDto.birth_date ?? null,
-          createUserDto.profile_picture ?? null,
-          createUserDto.bio ?? null,
-        ],
-      );
+      [
+        createUserDto.full_name,
+        createUserDto.email,
+        createUserDto.phone ?? null,
+        hashedPassword,
+        createUserDto.gender ?? null,
+        createUserDto.birth_date ?? null,
+        createUserDto.profile_picture ?? null,
+        createUserDto.bio ?? null,
+      ],
+    );
 
-      return new User(result.rows[0] as User);
+    return new User(result.rows[0] as User);
   }
 
   async findAll() {
@@ -248,5 +248,13 @@ export class UsersService {
       console.error('Database error in UsersService.remove:', error);
       throw new InternalServerErrorException('Failed to delete user');
     }
+  }
+
+  async getTotalUsers() {
+    const data = await this.pool.query<{ total_customers: number }>(
+      `SELECT COUNT(*) AS total_customers FROM Users;`,
+    );
+
+    return data.rows[0];
   }
 }

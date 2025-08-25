@@ -128,4 +128,50 @@ export class AppointmentsService {
       throw new InternalServerErrorException('Failed to search appointments');
     }
   }
+
+  async getActiveCustomers() {
+    const data = await this.pool.query<{ total_customers: number }>(
+      `SELECT COUNT(DISTINCT customer_id) AS active_customers
+       FROM Appointments
+       WHERE status IN ('confirmed', 'completed');`,
+    );
+
+    return data.rows[0];
+  }
+
+  async getAverageAppointmentsPerCustomer() {
+    const data = await this.pool.query<{
+      customer_id: string;
+      appointments_count: number;
+    }>(
+      `SELECT customer_id, COUNT(*) AS appointments_count
+       FROM Appointments
+       GROUP BY customer_id;`,
+    );
+
+    return data.rows;
+  }
+
+  async getAppointmentsByStatus() {
+    const data = await this.pool.query<{ status: string; count: number }>(
+      `SELECT status, COUNT(*) AS count
+       FROM Appointments
+       GROUP BY status;`,
+    );
+
+    return data.rows;
+  }
+
+  async getRevenueByMonth() {
+    const data = await this.pool.query<{ month: string; revenue: number }>(
+      `SELECT DATE_TRUNC('month', scheduled_at) AS month, SUM(s.price) AS revenue
+       FROM Appointments a
+       JOIN Services s ON s.id = a.service_id
+       WHERE a.payment_status = 'paid'
+       GROUP BY month
+       ORDER BY month;`,
+    );
+
+    return data.rows;
+  }
 }

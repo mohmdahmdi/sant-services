@@ -183,4 +183,42 @@ export class BusinessService {
       );
     }
   }
+
+  async getTotalBusinesses() {
+    const data = await this.pool.query<{ total_businesses: number }>(
+      `SELECT COUNT(*) AS total_businesses FROM Businesses;`,
+    );
+
+    return data.rows[0];
+  }
+
+  async getAverageRatingPerBusiness() {
+    const data = await this.pool.query<{
+      id: string;
+      name: string;
+      avg_service_rating: number;
+    }>(
+      `SELECT b.id, b.name, AVG(s.rating) AS avg_service_rating
+       FROM Businesses b
+       JOIN Services s ON s.business_id = b.id
+       GROUP BY b.id, b.name;`,
+    );
+
+    return data.rows;
+  }
+
+  async getActiveServicesPerBusiness() {
+    const data = await this.pool.query<{
+      id: string;
+      name: string;
+      active_services: number;
+    }>(
+      `SELECT b.id, b.name, COUNT(s.id) AS active_services
+       FROM Businesses b
+       LEFT JOIN Services s ON s.business_id = b.id AND s.is_active = TRUE
+       GROUP BY b.id, b.name;`,
+    );
+
+    return data.rows;
+  }
 }
