@@ -191,4 +191,23 @@ export class ServicesService {
 
     return data.rows;
   }
+
+  async findMostPopularCategories(limit: number = 5) {
+    const query = `
+      SELECT c.id, c.name, COUNT(s.id) AS total_services
+      FROM servicecategories c
+      LEFT JOIN services s ON s.category_id = c.id
+      GROUP BY c.id, c.name
+      ORDER BY total_services DESC
+      LIMIT $1;
+    `;
+
+    const result = await this.pool.query<{
+      id: string;
+      name: string;
+      total_services: number;
+    }>(query, [limit]);
+
+    return result.rows;
+  }
 }
