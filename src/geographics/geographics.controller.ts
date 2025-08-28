@@ -11,6 +11,7 @@ import { GeographicsService } from './geographics.service';
 import { CreateGeographicDto } from './dto/create-geographic.dto';
 import { UpdateGeographicDto } from './dto/update-geographic.dto';
 import { Geographic } from './entities/geographic.entity';
+import { FindNearByDto } from './dto/findNearBy-geographic.dto';
 
 @Controller('geographics')
 export class GeographicsController {
@@ -19,6 +20,15 @@ export class GeographicsController {
   @Post()
   create(@Body() dto: CreateGeographicDto): Promise<Geographic> {
     return this.service.create(dto);
+  }
+
+  @Post()
+  findNearBy(@Body() dto: FindNearByDto): Promise<Geographic[]> {
+    return this.service.findNearby(
+      Number(dto.lat),
+      Number(dto.lon),
+      dto.radiusKm,
+    );
   }
 
   @Get()

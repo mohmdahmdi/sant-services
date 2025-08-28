@@ -122,4 +122,25 @@ export class GeographicsService {
       throw new InternalServerErrorException('Failed to search geographics');
     }
   }
+
+  async findNearby(lat: number, lon: number, radiusKm: number) {
+    try {
+      const query = `
+      SELECT b.id, b.name, l.city, l.district, l.address,
+             ST_Distance(l.geom, ST_MakePoint($2, $1)::geography) AS distance_m
+      FROM businesses b
+      JOIN locations l ON b.location_id = l.id
+      WHERE ST_DWithin(l.geom, ST_MakePoint($2, $1)::geography, $3)
+      ORDER BY distance_m;
+    `;
+
+      // Note: order is lon, lat for PostGIS
+      const result = await this.pool.query(query, [lat, lon, radiusKm * 1000]);
+      return result.rows as Geographic[];
+    } catch {
+      throw new InternalServerErrorException(
+        'Failed to fetch nearby businesses',
+      );
+    }
+  }
 }
