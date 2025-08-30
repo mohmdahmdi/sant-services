@@ -31,6 +31,11 @@ export class ServicesController {
     return this.service.findOne(id);
   }
 
+  @Get('most-popular/:limit')
+  findMostPopularCategories(@Param('limit') limit: number) {
+    return this.service.findMostPopularCategories(limit);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
