@@ -210,4 +210,32 @@ export class ServicesService {
 
     return result.rows;
   }
+
+  async getServicesByBeauticianId(beauticianId: string) {
+    const beauticianCheck = await this.pool.query(
+      'SELECT id FROM beauticians WHERE id = $1',
+      [beauticianId],
+    );
+
+    if (!beauticianCheck)
+      throw new NotFoundException(
+        `Beautician with ID ${beauticianId} not found`,
+      );
+
+    const query = `
+      SELECT s.id, s.title, s.description, s.price, s.duration_minutes,
+             s.image, s.is_active,
+             b.name AS business_name,
+             c.name AS category_name
+      FROM services s
+      LEFT JOIN businesses b ON s.business_id = b.id
+      LEFT JOIN servicecategories c ON s.category_id = c.id
+      WHERE s.beautician_id = $1 AND s.is_active = TRUE
+      ORDER BY s.title ASC
+    `;
+
+    const data = await this.pool.query(query, [beauticianId]);
+
+    return data.rows as Service[];
+  }
 }

@@ -36,6 +36,11 @@ export class ServicesController {
     return this.service.findMostPopularCategories(limit);
   }
 
+  @Get('/beautician/:id')
+  getServicesByBeauticianId(@Param('id') id: string) {
+    return this.service.getServicesByBeauticianId(id);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
