@@ -32,6 +32,11 @@ export class AppointmentsController {
     return this.service.findOne(id);
   }
 
+  @Get('/customer/:id')
+  getAppointmentsByCustomerId(@Param('id') customerId: string) {
+    return this.service.getAppointmentsByCustomerId(customerId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

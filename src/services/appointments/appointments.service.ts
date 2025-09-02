@@ -129,6 +129,43 @@ export class AppointmentsService {
     }
   }
 
+  async getAppointmentsByCustomerId(customerId: string) {
+    const query = `
+      SELECT a.id AS appointment_id,
+             a.scheduled_at,
+             a.status,
+             a.payment_status,
+             s.id AS service_id,
+             s.title AS service_title,
+             s.price,
+             b.id AS beautician_id,
+             u.full_name AS beautician_name,
+             biz.id AS business_id,
+             biz.name AS business_name
+      FROM appointments a
+      JOIN services s ON a.service_id = s.id
+      JOIN beauticians b ON a.beautician_id = b.id
+      JOIN users u ON b.user_id = u.id
+      JOIN businesses biz ON s.business_id = biz.id
+      WHERE a.customer_id = $1
+      ORDER BY a.scheduled_at DESC;
+    `;
+    const result = await this.pool.query<{
+      appointment_id: string;
+      scheduled_at: string;
+      status: string;
+      payment_status: string;
+      service_id: string;
+      service_title: string;
+      price: string;
+      beautician_id: string;
+      beautician_name: string;
+      business_id: string;
+      business_name: string;
+    }>(query, [customerId]);
+    return result.rows;
+  }
+
   async getActiveCustomers() {
     const data = await this.pool.query<{ total_customers: number }>(
       `SELECT COUNT(DISTINCT customer_id) AS active_customers
