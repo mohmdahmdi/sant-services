@@ -223,15 +223,13 @@ export class ServicesService {
       );
 
     const query = `
-      SELECT s.id, s.title, s.description, s.price, s.duration_minutes,
-             s.image, s.is_active,
-             b.name AS business_name,
-             c.name AS category_name
+      SELECT s.id, s.title, s.description, s.price, s.duration_minutes, s.image,
+            s.gender_target, s.is_active, c.name AS category_name, b.name AS business_name
       FROM services s
-      LEFT JOIN businesses b ON s.business_id = b.id
-      LEFT JOIN servicecategories c ON s.category_id = c.id
-      WHERE s.beautician_id = $1 AND s.is_active = TRUE
-      ORDER BY s.title ASC
+      JOIN servicecategories c ON c.id = s.category_id
+      JOIN businesses b ON b.id = s.business_id
+      JOIN beauticians bt ON bt.business_id = b.id
+      WHERE bt.id = $1 AND s.is_active = true;
     `;
 
     const data = await this.pool.query(query, [beauticianId]);
