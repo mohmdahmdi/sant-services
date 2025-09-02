@@ -35,6 +35,11 @@ export class BusinessController {
     return this.businessService.findByUserId(id);
   }
 
+  @Get('/business_type/:id')
+  getByBusinessType(@Param('id') businessTypeId: string) {
+    return this.businessService.getByBusinessType(businessTypeId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

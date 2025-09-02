@@ -221,4 +221,49 @@ export class BusinessService {
 
     return data.rows;
   }
+
+  async getByBusinessType(businessTypeId: string) {
+    const exist = await this.pool.query(
+      `SELECT id FROM business_types WHERE id = '${businessTypeId}'`,
+    );
+
+    if (!exist.rowCount)
+      throw new NotFoundException(
+        `business type with id: ${businessTypeId} not found!`,
+      );
+
+    const result = await this.pool.query<
+      {
+        id: string;
+        name: string;
+        description: string;
+        logo: string;
+        cover_image: string;
+        city: string;
+        district: string;
+        address: string;
+        phone: string;
+        email: string;
+        website: string;
+        instagram: string;
+        whatsapp: string;
+        is_verified: boolean;
+        is_active: boolean;
+        created_at: string;
+      }[]
+    >(
+      `
+        SELECT b.id, b.name, b.description, b.logo, b.cover_image,
+               l.city, l.district, l.address,
+               b.phone, b.email, b.website, b.instagram, b.whatsapp,
+               b.is_verified, b.is_active, b.created_at
+        FROM businesses b
+        LEFT JOIN locations l ON b.location_id = l.id
+        WHERE b.business_type_id = $1
+        ORDER BY b.name;
+        `,
+      [businessTypeId],
+    );
+    return result.rows;
+  }
 }
