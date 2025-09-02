@@ -157,9 +157,15 @@ export class GeographicsService {
       WHERE b.id = $1;
     `;
 
-    const result = await this.pool.query<{ name: string | undefined }>(query, [
-      businessId,
-    ]);
+    const result = await this.pool.query<{
+      id: string;
+      country: string;
+      city: string;
+      district: string;
+      address: string;
+      latitude: string;
+      longitude: string;
+    }>(query, [businessId]);
 
     if (!result) {
       throw new NotFoundException(
