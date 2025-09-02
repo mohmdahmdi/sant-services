@@ -145,9 +145,11 @@ export class GeographicsService {
   }
 
   async findLocationByBusinessId(businessId: string) {
-    const exist = (await this.pool.query('SELECT * FROM businesses')).rows;
+    const exist = await this.pool.query(
+      `SELECT * FROM businesses WHERE id = '${businessId}'`,
+    );
 
-    if (!exist)
+    if (!exist.rowCount)
       throw new NotFoundException(`business with id ${businessId} not found!`);
     const query = `
       SELECT l.id, l.country, l.city, l.district, l.address,

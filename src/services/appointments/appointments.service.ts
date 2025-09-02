@@ -150,19 +150,21 @@ export class AppointmentsService {
       WHERE a.customer_id = $1
       ORDER BY a.scheduled_at DESC;
     `;
-    const result = await this.pool.query<{
-      appointment_id: string;
-      scheduled_at: string;
-      status: string;
-      payment_status: string;
-      service_id: string;
-      service_title: string;
-      price: string;
-      beautician_id: string;
-      beautician_name: string;
-      business_id: string;
-      business_name: string;
-    }>(query, [customerId]);
+    const result = await this.pool.query<
+      {
+        appointment_id: string;
+        scheduled_at: string;
+        status: string;
+        payment_status: string;
+        service_id: string;
+        service_title: string;
+        price: string;
+        beautician_id: string;
+        beautician_name: string;
+        business_id: string;
+        business_name: string;
+      }[]
+    >(query, [customerId]);
     return result.rows;
   }
 

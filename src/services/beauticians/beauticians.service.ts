@@ -184,14 +184,16 @@ export class BeauticiansService {
       ORDER BY u.full_name;
     `;
 
-    const result = await this.pool.query<{
-      id: string;
-      full_name: string;
-      phone: string;
-      email: string;
-      business_name: string;
-      business_id: string;
-    }>(query, [serviceId]);
+    const result = await this.pool.query<
+      {
+        id: string;
+        full_name: string;
+        phone: string;
+        email: string;
+        business_name: string;
+        business_id: string;
+      }[]
+    >(query, [serviceId]);
 
     return result.rows;
   }
@@ -207,14 +209,16 @@ export class BeauticiansService {
       ORDER BY u.full_name;
     `;
 
-    const result = await this.pool.query<{
-      id: string;
-      full_name: string;
-      phone: string;
-      email: string;
-      business_name: string;
-      business_id: string;
-    }>(query, [businessId]);
+    const result = await this.pool.query<
+      {
+        id: string;
+        full_name: string;
+        phone: string;
+        email: string;
+        business_name: string;
+        business_id: string;
+      }[]
+    >(query, [businessId]);
 
     return result.rows;
   }
