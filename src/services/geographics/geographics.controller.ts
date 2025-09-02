@@ -41,6 +41,10 @@ export class GeographicsController {
     return this.service.findOne(id);
   }
 
+  @Get('business/:id')
+  findLocationByBusinessId(@Param('id') businessId: string) {
+    return this.service.findLocationByBusinessId(businessId);
+  }
   @Patch(':id')
   update(
     @Param('id') id: string,

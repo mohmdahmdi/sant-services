@@ -143,4 +143,29 @@ export class GeographicsService {
       );
     }
   }
+
+  async findLocationByBusinessId(businessId: string) {
+    const exist = (await this.pool.query('SELECT * FROM businesses')).rows;
+
+    if (!exist)
+      throw new NotFoundException(`business with id ${businessId} not found!`);
+    const query = `
+      SELECT l.id, l.country, l.city, l.district, l.address,
+             l.latitude, l.longitude
+      FROM locations l
+      JOIN businesses b ON b.location_id = l.id
+      WHERE b.id = $1;
+    `;
+
+    const result = await this.pool.query<{ name: string | undefined }>(query, [
+      businessId,
+    ]);
+
+    if (!result) {
+      throw new NotFoundException(
+        `didn't found any location for ${businessId}`,
+      );
+    }
+    return result.rows[0] || {};
+  }
 }
