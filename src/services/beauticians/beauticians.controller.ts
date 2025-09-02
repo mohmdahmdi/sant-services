@@ -37,6 +37,11 @@ export class BeauticiansController {
     return this.service.getBeauticiansByServiceId(serviceId);
   }
 
+  @Get('by-business/:id')
+  getBeauticiansByBusinessId(@Param('id') businessId: string) {
+    return this.service.getBeauticiansByBusinessId(businessId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,
