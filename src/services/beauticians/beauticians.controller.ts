@@ -32,6 +32,11 @@ export class BeauticiansController {
     return this.service.findOne(id);
   }
 
+  @Get('by-service/:id')
+  getBeauticiansByServiceId(@Param('id') serviceId: string) {
+    return this.service.getBeauticiansByServiceId(serviceId);
+  }
+
   @Patch(':id')
   update(
     @Param('id') id: string,

@@ -171,4 +171,28 @@ export class BeauticiansService {
 
     return data.rows;
   }
+
+  async getBeauticiansByServiceId(serviceId: string) {
+    const query = `
+      SELECT bt.id, u.full_name, u.phone, u.email,
+             b.name AS business_name, b.id AS business_id
+      FROM beauticians bt
+      JOIN users u ON u.id = bt.user_id
+      JOIN businesses b ON b.id = bt.business_id
+      JOIN services s ON s.business_id = b.id
+      WHERE s.id = $1
+      ORDER BY u.full_name;
+    `;
+
+    const result = await this.pool.query<{
+      id: string;
+      full_name: string;
+      phone: string;
+      email: string;
+      business_name: string;
+      business_id: string;
+    }>(query, [serviceId]);
+
+    return result.rows;
+  }
 }
