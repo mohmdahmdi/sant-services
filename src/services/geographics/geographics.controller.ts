@@ -22,7 +22,7 @@ export class GeographicsController {
     return this.service.create(dto);
   }
 
-  @Post()
+  @Post('/find-nearby')
   findNearBy(@Body() dto: FindNearByDto): Promise<Geographic[]> {
     return this.service.findNearby(
       Number(dto.lat),

@@ -123,7 +123,7 @@ export class GeographicsService {
     }
   }
 
-  async findNearby(lat: number, lon: number, radiusKm: number) {
+  async findNearby(lat: number, lon: number, radiusKm: number = 5) {
     try {
       const query = `
       SELECT b.id, b.name, l.city, l.district, l.address,

@@ -1,4 +1,4 @@
-import { IsLatitude, IsLongitude, IsNumber } from 'class-validator';
+import { IsLatitude, IsLongitude, IsNumber, IsOptional } from 'class-validator';
 
 export class FindNearByDto {
   @IsLatitude()
@@ -7,6 +7,7 @@ export class FindNearByDto {
   @IsLongitude()
   lon: number;
 
+  @IsOptional()
   @IsNumber()
-  radiusKm: number;
+  radiusKm?: number;
 }
