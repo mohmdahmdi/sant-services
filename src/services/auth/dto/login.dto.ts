@@ -7,7 +7,7 @@ export class LoginDto {
 
   @IsString()
   @IsOptional()
-  number?: string;
+  phone?: string;
 
   @IsString()
   password: string;
