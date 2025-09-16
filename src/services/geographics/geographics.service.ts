@@ -126,7 +126,7 @@ export class GeographicsService {
   async findNearby(lat: number, lon: number, radiusKm: number = 5) {
     try {
       const query = `
-      SELECT b.id, b.name, l.city, l.district, l.address,
+      SELECT b.id, b.name, l.city, l.district, l.address, l.latitude, l.longitude,
              ST_Distance(l.geom, ST_MakePoint($2, $1)::geography) AS distance_m
       FROM businesses b
       JOIN locations l ON b.location_id = l.id
@@ -175,5 +175,70 @@ export class GeographicsService {
       );
     }
     return result.rows[0] || {};
+  }
+
+  async findInBounds(
+    swLat: number,
+    swLng: number,
+    neLat: number,
+    neLng: number,
+  ) {
+    try {
+      if (
+        swLat > neLat ||
+        swLng > neLng ||
+        Math.abs(neLng - swLng) > 180 ||
+        Math.abs(neLat - swLat) > 90
+      ) {
+        throw new InternalServerErrorException('Invalid bounding box');
+      }
+
+      const query = `
+      SELECT 
+        b.id AS business_id,
+        b.name AS business_name,
+        l.id AS location_id,
+        l.city,
+        l.district,
+        l.address,
+        l.latitude,
+        l.longitude,
+        ST_X(l.geom::geometry) AS lng,
+        ST_Y(l.geom::geometry) AS lat
+      FROM businesses b
+      JOIN locations l ON b.location_id = l.id
+      WHERE ST_Within(
+        l.geom,
+        ST_MakeEnvelope($1, $2, $3, $4, 4326)::geography
+      )
+      ORDER BY b.name;
+    `;
+
+      const result = await this.pool.query<{
+        business_id: string;
+        business_name: string;
+        location_id: string;
+        city: string;
+        district: string;
+        address: string;
+        latitude: string;
+        longitude: string;
+        lat: number;
+        lng: number;
+      }>(query, [swLng, swLat, neLng, neLat]);
+
+      return result.rows.map((row) => ({
+        ...row,
+        latitude: parseFloat(row.latitude),
+        longitude: parseFloat(row.longitude),
+        lat: row.lat,
+        lng: row.lng,
+      }));
+    } catch (error) {
+      console.error('Error finding locations in bounds:', error);
+      throw new InternalServerErrorException(
+        'Failed to fetch locations in bounds',
+      );
+    }
   }
 }

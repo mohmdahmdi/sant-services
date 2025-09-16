@@ -12,6 +12,7 @@ import { CreateGeographicDto } from './dto/create-geographic.dto';
 import { UpdateGeographicDto } from './dto/update-geographic.dto';
 import { Geographic } from './entities/geographic.entity';
 import { FindNearByDto } from './dto/findNearBy-geographic.dto';
+import { FindInBoundDto } from './dto/findInBound-geographic.dto';
 
 @Controller('geographics')
 export class GeographicsController {
@@ -61,5 +62,16 @@ export class GeographicsController {
   @Get('search/:term')
   search(@Param('term') term: string): Promise<Geographic[]> {
     return this.service.search(term);
+  }
+
+  // geographic.controller.ts
+  @Post('/in-bounds')
+  findInBounds(@Body() dto: FindInBoundDto) {
+    return this.service.findInBounds(
+      Number(dto.swLat),
+      Number(dto.swLng),
+      Number(dto.neLat),
+      Number(dto.neLng),
+    );
   }
 }
