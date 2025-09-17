@@ -86,4 +86,24 @@ export class ReportsService {
   async getRevenueByMonth() {
     return this.appointmentsService.getRevenueByMonth();
   }
+
+  async getKpis() {
+    const totalCustomers = await this.usersService.getTotalUsers();
+    const totalBusinesses = await this.businessesService.getTotalBusinesses();
+    const totalBeauticians =
+      await this.beauticiansService.getTotalBeauticians();
+    const totalActiveAppointments =
+      await this.appointmentsService.getAppointmentsByStatus();
+
+    const data = {
+      ...totalCustomers,
+      ...totalBusinesses,
+      ...totalBeauticians,
+      totalActiveAppointments: totalActiveAppointments.find(
+        (predicate) => predicate.status === 'confirmed',
+      )?.count,
+    };
+
+    return data;
+  }
 }

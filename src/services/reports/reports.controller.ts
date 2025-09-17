@@ -79,4 +79,9 @@ export class ReportsController {
   getRevenueByMonth() {
     return this.reportsService.getRevenueByMonth();
   }
+
+  @Get('kpis')
+  getKpis() {
+    return this.reportsService.getKpis();
+  }
 }
