@@ -194,26 +194,25 @@ export class GeographicsService {
       }
 
       const query = `
-      SELECT 
-        b.id AS business_id,
-        b.name AS business_name,
-        l.id AS location_id,
-        l.city,
-        l.district,
-        l.address,
-        l.latitude,
-        l.longitude,
-        ST_X(l.geom::geometry) AS lng,
-        ST_Y(l.geom::geometry) AS lat
-      FROM businesses b
-      JOIN locations l ON b.location_id = l.id
-      WHERE ST_Within(
-        l.geom,
-        ST_MakeEnvelope($1, $2, $3, $4, 4326)::geography
-      )
-      ORDER BY b.name;
+        SELECT 
+          b.id AS business_id,
+          b.name AS business_name,
+          l.id AS location_id,
+          l.city,
+          l.district,
+          l.address,
+          l.latitude,
+          l.longitude,
+          l.longitude AS lng,
+          l.latitude AS lat
+        FROM businesses b
+        JOIN locations l ON b.location_id = l.id
+        WHERE ST_Within(
+          ST_SetSRID(ST_MakePoint(l.longitude::double precision, l.latitude::double precision), 4326),
+          ST_MakeEnvelope($1, $2, $3, $4, 4326)
+        )
+        ORDER BY b.name;
     `;
-
       const result = await this.pool.query<{
         business_id: string;
         business_name: string;

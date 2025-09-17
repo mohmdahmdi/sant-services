@@ -10,6 +10,7 @@ import {
 import { BusinessService } from './business.service';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
+import { BusinessByAppointmentDto } from './dto/business-by-app.dto';
 
 @Controller('business')
 export class BusinessController {
@@ -38,6 +39,14 @@ export class BusinessController {
   @Get('/business_type/:id')
   getByBusinessType(@Param('id') businessTypeId: string) {
     return this.businessService.getByBusinessType(businessTypeId);
+  }
+
+  @Post('/top-businesses-by-appointments')
+  getTopBusinessesByAppointments(@Body() dto: BusinessByAppointmentDto) {
+    return this.businessService.getTopBusinessesByAppointments(
+      dto.days || 100,
+      dto.limit || 5,
+    );
   }
 
   @Patch(':id')

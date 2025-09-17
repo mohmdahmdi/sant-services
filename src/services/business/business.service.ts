@@ -266,4 +266,44 @@ export class BusinessService {
     );
     return result.rows;
   }
+
+  async getTopBusinessesByAppointments(days: number, limit: number) {
+    try {
+      const query = `
+        SELECT 
+          b.id,
+          b.name,
+          b.logo,
+          b.cover_image,
+          l.city,
+          l.district,
+          COUNT(a.id) AS total_appointments
+        FROM appointments a
+        JOIN services s ON a.service_id = s.id
+        JOIN businesses b ON s.business_id = b.id
+        LEFT JOIN locations l ON b.location_id = l.id
+        WHERE a.created_at >= NOW() - ($1 || ' days')::interval
+          AND a.status != 'canceled'
+        GROUP BY b.id, b.name, b.logo, b.cover_image, l.city, l.district
+        ORDER BY total_appointments DESC
+        LIMIT $2;
+    `;
+
+      const values = [days, limit];
+      const result = await this.pool.query<{
+        id: string;
+        name: string;
+        logo: string;
+        cover_image: 'string';
+        city: string;
+        district: string;
+        total_appointments: number;
+      }>(query, values);
+
+      return result.rows;
+    } catch (error) {
+      console.error('Database error in getTopBusinessesByAppointments:', error);
+      throw new InternalServerErrorException('Failed to fetch top businesses');
+    }
+  }
 }
