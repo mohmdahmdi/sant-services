@@ -236,4 +236,35 @@ export class ServicesService {
 
     return data.rows as Service[];
   }
+
+  async getServicesByBusinessId(businessId: string) {
+    const businessCheck = await this.pool.query(
+      'SELECT id FROM businesses WHERE id = $1',
+      [businessId],
+    );
+
+    if (!businessCheck)
+      throw new NotFoundException(`Business with ID ${businessId} not found`);
+
+    const query = `
+      SELECT s.description, s.image, s.price, s.rating,
+      s.title, s.is_active, s.duration_minutes  FROM services s
+      JOIN businesses b
+      ON s.business_id = s.id
+      WHERE b.id = $1
+      ORDER BY s.rating
+    `;
+
+    const data = await this.pool.query<{
+      description: string;
+      image: string;
+      price: string;
+      rating: string;
+      title: string;
+      is_active: boolean;
+      duration_minutes: string;
+    }>(query, [businessId]);
+
+    return data.rows;
+  }
 }

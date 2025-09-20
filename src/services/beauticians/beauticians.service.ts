@@ -200,23 +200,25 @@ export class BeauticiansService {
 
   async getBeauticiansByBusinessId(businessId: string) {
     const query = `
-      SELECT bt.id, u.full_name, u.phone, u.email,
-            b.name AS business_name, b.id AS business_id
+      SELECT bt.id, bt.bio, bt.experience_years, bt.rating,
+	    bt.specialties, u.id AS user_id, u.profile_picture, u.full_name
       FROM beauticians bt
       JOIN users u ON u.id = bt.user_id
       JOIN businesses b ON b.id = bt.business_id
       WHERE b.id = $1
-      ORDER BY u.full_name;
+      ORDER BY bt.experience_years;
     `;
 
     const result = await this.pool.query<
       {
         id: string;
+        bio: string;
+        experience_years: number;
+        rating: string;
+        specialties: string[];
+        user_id: string;
+        profile_picture: string;
         full_name: string;
-        phone: string;
-        email: string;
-        business_name: string;
-        business_id: string;
       }[]
     >(query, [businessId]);
 

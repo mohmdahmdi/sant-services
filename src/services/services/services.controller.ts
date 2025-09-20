@@ -58,4 +58,9 @@ export class ServicesController {
   search(@Param('term') term: string): Promise<Service[]> {
     return this.service.search(term);
   }
+
+  @Get('services-by-business/:id')
+  getServicesByBusinessId(@Param('id') businessId: string) {
+    return this.service.getServicesByBusinessId(businessId);
+  }
 }
