@@ -249,9 +249,7 @@ export class ServicesService {
     const query = `
       SELECT s.description, s.image, s.price, s.rating,
       s.title, s.is_active, s.duration_minutes  FROM services s
-      JOIN businesses b
-      ON s.business_id = s.id
-      WHERE b.id = $1
+      WHERE s.business_id = $1
       ORDER BY s.rating
     `;
 
