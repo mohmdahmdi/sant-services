@@ -195,8 +195,15 @@ export class GeographicsService {
 
       const query = `
         SELECT 
-          b.id AS business_id,
-          b.name AS business_name,
+          b.id,
+          b.name,
+          b.description,
+          b.owner_id,
+          b.logo,
+          b.cover_image,
+          b.is_active,
+          b.is_verified,
+          b.rating,
           l.id AS location_id,
           l.city,
           l.district,
@@ -215,7 +222,14 @@ export class GeographicsService {
     `;
       const result = await this.pool.query<{
         business_id: string;
-        business_name: string;
+        name: string;
+        description: string;
+        owner_id: string;
+        logo: string;
+        cover_image: string;
+        is_active: boolean;
+        is_verified: boolean;
+        rating: number;
         location_id: string;
         city: string;
         district: string;
