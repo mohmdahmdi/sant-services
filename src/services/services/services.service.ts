@@ -247,8 +247,7 @@ export class ServicesService {
       throw new NotFoundException(`Business with ID ${businessId} not found`);
 
     const query = `
-      SELECT s.description, s.image, s.price, s.rating,
-      s.title, s.is_active, s.duration_minutes  FROM services s
+      SELECT s.*  FROM services s
       WHERE s.business_id = $1
       ORDER BY s.rating
     `;
