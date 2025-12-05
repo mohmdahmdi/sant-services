@@ -275,8 +275,12 @@ export class BusinessService {
           b.name,
           b.logo,
           b.cover_image,
+          b.website,
+          b.is_verified,
+          b.rating,
           l.city,
           l.district,
+          l.address,
           COUNT(a.id) AS total_appointments
         FROM appointments a
         JOIN services s ON a.service_id = s.id
@@ -284,7 +288,7 @@ export class BusinessService {
         LEFT JOIN locations l ON b.location_id = l.id
         WHERE a.created_at >= NOW() - ($1 || ' days')::interval
           AND a.status != 'canceled'
-        GROUP BY b.id, b.name, b.logo, b.cover_image, l.city, l.district
+        GROUP BY b.id, b.name, b.logo, b.cover_image, l.city, l.district, l.address
         ORDER BY total_appointments DESC
         LIMIT $2;
     `;
@@ -294,8 +298,12 @@ export class BusinessService {
         id: string;
         name: string;
         logo: string;
-        cover_image: 'string';
+        cover_image: string;
+        website: string;
+        is_verified: boolean;
+        rating: string;
         city: string;
+        address: string;
         district: string;
         total_appointments: number;
       }>(query, values);
