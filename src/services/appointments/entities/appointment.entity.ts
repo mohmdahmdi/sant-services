@@ -1,40 +1,52 @@
+import { Service } from './../../services/entities/service.entity';
+import { Beautician } from './../../beauticians/entities/beautician.entity';
+import { User } from 'src/services/users/entities/user.entity';
 import {
-  IsUUID,
-  IsOptional,
-  IsString,
-  IsDateString,
-  IsIn,
-} from 'class-validator';
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 
+@Entity('appointments')
 export class Appointment {
-  @IsUUID()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @IsUUID()
+  @Column({ nullable: true })
   customer_id: string;
 
-  @IsUUID()
+  @ManyToOne(() => User, (user) => user.appointmentsAsCustomer)
+  @JoinColumn({ name: 'customer_id' })
+  customer: User;
+
+  @Column({ nullable: true })
   beautician_id: string;
 
-  @IsUUID()
+  @ManyToOne(() => Beautician, (beautician) => beautician.appointments)
+  @JoinColumn({ name: 'beautician_id' })
+  beautician: Beautician;
+
+  @Column({ nullable: true })
   service_id: string;
 
-  @IsDateString()
-  scheduled_at: string;
+  @ManyToOne(() => Service, (service) => service.appointments)
+  @JoinColumn({ name: 'service_id' })
+  service: Service;
 
-  @IsOptional()
-  @IsIn(['pending', 'confirmed', 'completed', 'cancelled'])
-  status?: string;
+  @Column({ type: 'timestamp' })
+  scheduled_at: Date;
 
-  @IsOptional()
-  @IsIn(['unpaid', 'paid'])
-  payment_status?: string;
+  @Column({ length: 20, default: 'pending' })
+  status: string;
 
-  @IsOptional()
-  @IsString()
-  notes?: string;
+  @Column({ name: 'payment_status', length: 20, default: 'unpaid' })
+  paymentStatus: string;
 
-  constructor(partial: Partial<Appointment>) {
-    Object.assign(this, partial);
-  }
+  @Column({ nullable: true })
+  notes: string;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  created_at: Date;
 }

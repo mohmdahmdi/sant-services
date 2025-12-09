@@ -24,7 +24,7 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @Length(6, 100)
-  password?: string;
+  passwordHash?: string;
 
   @IsOptional()
   @IsString()

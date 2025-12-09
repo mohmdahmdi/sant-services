@@ -10,7 +10,7 @@ import {
 import { GeographicsService } from './geographics.service';
 import { CreateGeographicDto } from './dto/create-geographic.dto';
 import { UpdateGeographicDto } from './dto/update-geographic.dto';
-import { Geographic } from './entities/geographic.entity';
+import { Location } from './entities/location.entity';
 import { FindNearByDto } from './dto/findNearBy-geographic.dto';
 import { FindInBoundDto } from './dto/findInBound-geographic.dto';
 
@@ -19,12 +19,12 @@ export class GeographicsController {
   constructor(private readonly service: GeographicsService) {}
 
   @Post()
-  create(@Body() dto: CreateGeographicDto): Promise<Geographic> {
+  create(@Body() dto: CreateGeographicDto): Promise<Location> {
     return this.service.create(dto);
   }
 
   @Post('/find-nearby')
-  findNearBy(@Body() dto: FindNearByDto): Promise<Geographic[]> {
+  findNearBy(@Body() dto: FindNearByDto): Promise<Location[]> {
     return this.service.findNearby(
       Number(dto.lat),
       Number(dto.lon),
@@ -33,12 +33,12 @@ export class GeographicsController {
   }
 
   @Get()
-  findAll(): Promise<Geographic[]> {
+  findAll(): Promise<Location[]> {
     return this.service.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Geographic> {
+  findOne(@Param('id') id: string): Promise<Location> {
     return this.service.findOne(id);
   }
 
@@ -50,7 +50,7 @@ export class GeographicsController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateGeographicDto,
-  ): Promise<Geographic> {
+  ): Promise<Location> {
     return this.service.update(id, dto);
   }
 
@@ -60,7 +60,7 @@ export class GeographicsController {
   }
 
   @Get('search/:term')
-  search(@Param('term') term: string): Promise<Geographic[]> {
+  search(@Param('term') term: string): Promise<Location[]> {
     return this.service.search(term);
   }
 

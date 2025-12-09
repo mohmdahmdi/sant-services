@@ -1,44 +1,45 @@
+import { Appointment } from './../../appointments/entities/appointment.entity';
+import { Business } from './../../business/entities/business.entity';
+import { User } from 'src/services/users/entities/user.entity';
 import {
-  IsUUID,
-  IsOptional,
-  IsString,
-  IsBoolean,
-  IsNumber,
-  IsArray,
-} from 'class-validator';
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
 
+@Entity('beauticians')
 export class Beautician {
-  @IsUUID()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @IsUUID()
+  @Column({ nullable: true })
   user_id: string;
 
-  @IsUUID()
+  @ManyToOne(() => User, (user) => user.beauticians)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column({ nullable: true })
   business_id: string;
 
-  @IsOptional()
-  @IsString()
-  bio?: string;
+  @ManyToOne(() => Business, (business) => business.beauticians)
+  @JoinColumn({ name: 'business_id' })
+  business: Business;
 
-  @IsOptional()
-  @IsNumber()
-  experience_years?: number;
+  @Column({ nullable: true })
+  bio: string;
+  @Column({ type: 'int', nullable: true })
+  experience_years: number;
+  @Column('text', { array: true, nullable: true })
+  specialties: string[];
+  @Column({ default: false })
+  is_freelancer: boolean;
+  @Column({ type: 'numeric', precision: 2, scale: 1, default: 0.0 })
+  rating: number;
 
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  specialties?: string[];
-
-  @IsOptional()
-  @IsBoolean()
-  is_freelancer?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  rating?: number;
-
-  constructor(partial: Partial<Beautician>) {
-    Object.assign(this, partial);
-  }
+  @OneToMany(() => Appointment, (appointment) => appointment.beautician)
+  appointments: Appointment[];
 }

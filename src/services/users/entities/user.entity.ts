@@ -1,41 +1,63 @@
-import { Exclude } from 'class-transformer';
-import { IsEmail, IsOptional, IsString, IsUUID, Length } from 'class-validator';
+import { Appointment } from './../../appointments/entities/appointment.entity';
+import { Business } from './../../business/entities/business.entity';
+import { Beautician } from './../../beauticians/entities/beautician.entity';
+import { UserRole } from './UserRole.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  ManyToMany,
+  JoinTable,
+} from 'typeorm';
 
+@Entity('users')
 export class User {
-  @IsUUID()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @IsString()
-  @Length(1, 100)
+  @Column({ length: 100 })
   full_name: string;
 
-  @IsEmail()
+  @Column({ unique: true })
   email: string;
 
-  @IsOptional()
-  @IsString()
-  @Length(0, 20)
-  phone?: string;
+  @Column({ length: 20, nullable: true })
+  phone: string;
 
-  @Exclude()
-  password_hash: string;
+  @Column({ name: 'password_hash' })
+  passwordHash: string;
 
-  @IsOptional()
-  @IsString()
-  gender?: string;
+  @Column({ length: 10, nullable: true })
+  gender: string;
 
-  @IsOptional()
-  birth_date?: Date;
+  @Column({ type: 'date', nullable: true })
+  birth_date: string;
 
-  @IsOptional()
-  profile_picture?: string;
+  @Column({ nullable: true })
+  profile_picture: string;
 
-  @IsOptional()
-  bio?: string;
+  @Column({ nullable: true })
+  bio: string;
 
+  @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  constructor(partial: Partial<User>) {
-    Object.assign(this, partial);
-  }
+  // Relations
+  @OneToMany(() => Beautician, (beautician) => beautician.user)
+  beauticians: Beautician[];
+
+  @OneToMany(() => Business, (business) => business.owner)
+  ownedBusinesses: Business[];
+
+  @OneToMany(() => Appointment, (appointment) => appointment.customer)
+  appointmentsAsCustomer: Appointment[];
+
+  @ManyToMany(() => UserRole)
+  @JoinTable({
+    name: 'user_roles',
+    joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+  })
+  roles: UserRole[];
 }

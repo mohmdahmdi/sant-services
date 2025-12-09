@@ -1,37 +1,44 @@
-// src/appointments/appointments.service.ts
 import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
-  Inject,
 } from '@nestjs/common';
-import { Pool } from 'pg';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 
+export interface AppointmentWithDetails {
+  appointment_id: string;
+  scheduled_at: string;
+  status: string;
+  payment_status: string;
+  service_id: string;
+  service_title: string;
+  price: number;
+  beautician_id: string;
+  beautician_name: string;
+  business_id: string;
+  business_name: string;
+}
+
 @Injectable()
 export class AppointmentsService {
-  constructor(@Inject('PG_POOL') private pool: Pool) {}
+  constructor(
+    @InjectRepository(Appointment)
+    private appointmentRepository: Repository<Appointment>,
+    private dataSource: DataSource,
+  ) {}
 
   async create(dto: CreateAppointmentDto): Promise<Appointment> {
     try {
-      const query = `
-        INSERT INTO appointments (customer_id, beautician_id, service_id, scheduled_at, status, payment_status, notes)
-        VALUES ($1,$2,$3,$4,$5,$6,$7)
-        RETURNING *;
-      `;
-      const values = [
-        dto.customer_id,
-        dto.beautician_id,
-        dto.service_id,
-        dto.scheduled_at,
-        dto.status || 'pending',
-        dto.payment_status || 'unpaid',
-        dto.notes || null,
-      ];
-      const result = await this.pool.query<Appointment>(query, values);
-      return result.rows[0];
+      const appointment = this.appointmentRepository.create({
+        ...dto,
+        status: dto.status || 'pending',
+        paymentStatus: dto.payment_status || 'unpaid',
+      });
+      return await this.appointmentRepository.save(appointment);
     } catch (error) {
       console.error('Error creating appointment:', error);
       throw new InternalServerErrorException('Failed to create appointment');
@@ -39,97 +46,56 @@ export class AppointmentsService {
   }
 
   async findAll(): Promise<Appointment[]> {
-    try {
-      const result = await this.pool.query<Appointment>(
-        'SELECT * FROM appointments',
-      );
-      return result.rows;
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-      throw new InternalServerErrorException('Failed to fetch appointments');
-    }
+    return await this.appointmentRepository.find({
+      relations: ['customer', 'beautician', 'service'],
+    });
   }
 
   async findOne(id: string): Promise<Appointment> {
-    try {
-      const result = await this.pool.query<Appointment>(
-        'SELECT * FROM appointments WHERE id = $1',
-        [id],
-      );
-      if (!result.rows.length)
-        throw new NotFoundException(`Appointment with id ${id} not found`);
-      return result.rows[0];
-    } catch (error) {
-      console.error('Error fetching appointment:', error);
-      throw error instanceof NotFoundException
-        ? error
-        : new InternalServerErrorException();
+    const appointment = await this.appointmentRepository.findOne({
+      where: { id },
+      relations: ['customer', 'beautician', 'service'],
+    });
+    if (!appointment) {
+      throw new NotFoundException(`Appointment with id ${id} not found`);
     }
+    return appointment;
   }
 
   async update(id: string, dto: UpdateAppointmentDto): Promise<Appointment> {
-    try {
-      const fields = Object.keys(dto);
-      if (!fields.length)
-        throw new InternalServerErrorException('No fields to update');
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      const values = fields.map((field) => dto[field]);
-      const setClause = fields
-        .map((field, idx) => `${field} = $${idx + 1}`)
-        .join(', ');
-
-      const query = `
-        UPDATE appointments
-        SET ${setClause}
-        WHERE id = $${fields.length + 1}
-        RETURNING *;
-      `;
-
-      const result = await this.pool.query<Appointment>(query, [...values, id]);
-      if (!result.rows.length)
-        throw new NotFoundException(`Appointment with id ${id} not found`);
-      return result.rows[0];
-    } catch (error) {
-      console.error('Error updating appointment:', error);
-      throw error instanceof NotFoundException
-        ? error
-        : new InternalServerErrorException();
+    const appointment = await this.appointmentRepository.findOneBy({ id });
+    if (!appointment) {
+      throw new NotFoundException(`Appointment with id ${id} not found`);
     }
+
+    if (dto.payment_status !== undefined) {
+      appointment.paymentStatus = dto.payment_status;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      delete (dto as any).payment_status;
+    }
+
+    Object.assign(appointment, dto);
+    return await this.appointmentRepository.save(appointment);
   }
 
   async remove(id: string): Promise<void> {
-    try {
-      const result = await this.pool.query(
-        'DELETE FROM appointments WHERE id = $1 RETURNING id',
-        [id],
-      );
-      if (!result.rows.length)
-        throw new NotFoundException(`Appointment with id ${id} not found`);
-    } catch (error) {
-      console.error('Error deleting appointment:', error);
-      throw error instanceof NotFoundException
-        ? error
-        : new InternalServerErrorException();
+    const result = await this.appointmentRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Appointment with id ${id} not found`);
     }
   }
 
-  // Bonus: search appointments by customer, beautician, or status
   async search(term: string): Promise<Appointment[]> {
-    try {
-      const query = `
-        SELECT * FROM appointments
-        WHERE status ILIKE $1 OR payment_status ILIKE $1
-      `;
-      const result = await this.pool.query<Appointment>(query, [`%${term}%`]);
-      return result.rows;
-    } catch (error) {
-      console.error('Error searching appointments:', error);
-      throw new InternalServerErrorException('Failed to search appointments');
-    }
+    return await this.appointmentRepository
+      .createQueryBuilder('a')
+      .where('a.status ILIKE :term', { term: `%${term}%` })
+      .orWhere('a.paymentStatus ILIKE :term', { term: `%${term}%` })
+      .getMany();
   }
 
-  async getAppointmentsByCustomerId(customerId: string) {
+  async getAppointmentsByCustomerId(
+    customerId: string,
+  ): Promise<AppointmentWithDetails[]> {
     const query = `
       SELECT a.id AS appointment_id,
              a.scheduled_at,
@@ -150,67 +116,95 @@ export class AppointmentsService {
       WHERE a.customer_id = $1
       ORDER BY a.scheduled_at DESC;
     `;
-    const result = await this.pool.query<
-      {
-        appointment_id: string;
-        scheduled_at: string;
-        status: string;
-        payment_status: string;
-        service_id: string;
-        service_title: string;
-        price: string;
-        beautician_id: string;
-        beautician_name: string;
-        business_id: string;
-        business_name: string;
-      }[]
-    >(query, [customerId]);
-    return result.rows;
+
+    const result = await this.dataSource.query<AppointmentWithDetails[]>(
+      query,
+      [customerId],
+    );
+    return result.map((row) => ({
+      ...row,
+      price: typeof row.price === 'string' ? parseFloat(row.price) : row.price,
+    }));
   }
 
   async getActiveCustomers() {
-    const data = await this.pool.query<{ total_customers: number }>(
-      `SELECT COUNT(DISTINCT customer_id) AS active_customers
-       FROM Appointments
-       WHERE status IN ('confirmed', 'completed');`,
+    interface ActiveCustomersResult {
+      active_customers: string;
+    }
+
+    const result = await this.dataSource.query<ActiveCustomersResult[]>(
+      `
+        SELECT COUNT(DISTINCT customer_id)::text AS active_customers
+        FROM appointments
+        WHERE status IN ('confirmed', 'completed')
+      `,
     );
 
-    return data.rows[0];
+    return {
+      total_customers: parseInt(result[0]?.active_customers || '0', 10),
+    };
   }
 
   async getAverageAppointmentsPerCustomer() {
-    const data = await this.pool.query<{
+    interface AvgAppointmentsResult {
       customer_id: string;
-      appointments_count: number;
-    }>(
-      `SELECT customer_id, COUNT(*) AS appointments_count
-       FROM Appointments
-       GROUP BY customer_id;`,
+      appointments_count: string;
+    }
+
+    const result = await this.dataSource.query<AvgAppointmentsResult[]>(
+      `
+        SELECT customer_id, COUNT(*)::text AS appointments_count
+        FROM appointments
+        GROUP BY customer_id
+      `,
     );
 
-    return data.rows;
+    return result.map((row) => ({
+      customer_id: row.customer_id,
+      appointments_count: parseInt(row.appointments_count, 10),
+    }));
   }
 
   async getAppointmentsByStatus() {
-    const data = await this.pool.query<{ status: string; count: number }>(
-      `SELECT status, COUNT(*) AS count
-       FROM Appointments
-       GROUP BY status;`,
+    interface StatusCountResult {
+      status: string;
+      count: string;
+    }
+
+    const result = await this.dataSource.query<StatusCountResult[]>(
+      `
+        SELECT status, COUNT(*)::text AS count
+        FROM appointments
+        GROUP BY status
+      `,
     );
 
-    return data.rows;
+    return result.map((row) => ({
+      status: row.status,
+      count: parseInt(row.count, 10),
+    }));
   }
 
   async getRevenueByMonth() {
-    const data = await this.pool.query<{ month: string; revenue: number }>(
-      `SELECT DATE_TRUNC('month', scheduled_at) AS month, SUM(s.price) AS revenue
-       FROM Appointments a
-       JOIN Services s ON s.id = a.service_id
-       WHERE a.payment_status = 'paid'
-       GROUP BY month
-       ORDER BY month;`,
+    interface RevenueByMonthResult {
+      month: string;
+      revenue: string;
+    }
+
+    const result = await this.dataSource.query<RevenueByMonthResult[]>(
+      `
+        SELECT DATE_TRUNC('month', scheduled_at)::text AS month, SUM(s.price)::text AS revenue
+        FROM appointments a
+        JOIN services s ON s.id = a.service_id
+        WHERE a.payment_status = 'paid'
+        GROUP BY month
+        ORDER BY month
+      `,
     );
 
-    return data.rows;
+    return result.map((row) => ({
+      month: row.month,
+      revenue: parseFloat(row.revenue) || 0,
+    }));
   }
 }

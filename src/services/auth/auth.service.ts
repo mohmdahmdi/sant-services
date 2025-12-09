@@ -40,9 +40,9 @@ export class AuthService {
     } else {
       user = await this.usersService.findByNumber(identifier);
     }
-    if (user && (await bcrypt.compare(password, user.password_hash))) {
+    if (user && (await bcrypt.compare(password, user.passwordHash))) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password_hash, ...result } = user;
+      const { passwordHash, ...result } = user;
       return result;
     }
     return null;
