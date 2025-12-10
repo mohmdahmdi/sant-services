@@ -33,7 +33,7 @@ export class Service {
   title: string;
   @Column({ nullable: true })
   description: string;
-  @Column({ type: 'numeric', precision: 10, scale: 2 })
+  @Column({ type: 'numeric', precision: 12, scale: 2 })
   price: number;
   @Column({ type: 'int' })
   duration_minutes: number;

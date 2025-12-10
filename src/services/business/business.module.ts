@@ -8,6 +8,7 @@ import { BusinessType } from './entities/business-type.entity';
 import { Service } from '../services/entities/service.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { BusinessController } from './business.controller';
+import { Availability } from './entities/availabilty.entity';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { BusinessController } from './business.controller';
       Business,
       Location,
       BusinessType,
+      Availability,
       Service,
       Appointment,
     ]),

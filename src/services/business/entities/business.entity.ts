@@ -11,6 +11,7 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
+import { Availability } from './availabilty.entity';
 
 @Entity('businesses')
 export class Business {
@@ -32,24 +33,40 @@ export class Business {
 
   @Column({ nullable: true })
   logo: string;
+
   @Column({ nullable: true })
   cover_image: string;
+
   @Column({ nullable: true })
   phone: string;
+
   @Column({ nullable: true })
   email: string;
+
   @Column({ nullable: true })
   website: string;
+
   @Column({ nullable: true })
   instagram: string;
+
   @Column({ nullable: true })
   whatsapp: string;
+
   @Column({ type: 'numeric', precision: 2, scale: 1, default: 0.0 })
   rating: number;
+
   @Column({ default: false })
   is_verified: boolean;
+
   @Column({ default: true })
   is_active: boolean;
+
+  @Column({ nullable: true })
+  available_from: string;
+
+  @Column({ nullable: true })
+  available_to: string;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
@@ -60,12 +77,13 @@ export class Business {
   @JoinColumn({ name: 'location_id' })
   location: Location;
 
-  @Column({ nullable: true })
-  business_type_id: string;
-
   @ManyToOne(() => BusinessType, (type) => type.businesses)
   @JoinColumn({ name: 'business_type_id' })
   businessType: BusinessType;
+
+  @ManyToOne(() => Availability, (availability) => availability.businesses)
+  @JoinColumn({ name: 'availability_id' })
+  availability: Availability;
 
   @OneToMany(() => Service, (service) => service.business)
   services: Service[];

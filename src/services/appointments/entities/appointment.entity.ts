@@ -38,6 +38,9 @@ export class Appointment {
   @Column({ type: 'timestamp' })
   scheduled_at: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  completed_at: Date;
+
   @Column({ length: 20, default: 'pending' })
   status: string;
 

@@ -23,6 +23,7 @@ import { ServiceCategory } from './services/services/entities/service-category.e
 import { Beautician } from './services/beauticians/entities/beautician.entity';
 import { Appointment } from './services/appointments/entities/appointment.entity';
 import { UserRole } from './services/users/entities/UserRole.entity';
+import { Availability } from './services/business/entities/availabilty.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -37,6 +38,7 @@ export const AppDataSource = new DataSource({
     Business,
     Location,
     Service,
+    Availability,
     BusinessType,
     ServiceCategory,
     Beautician,
