@@ -11,12 +11,10 @@ export class LoggerMiddleware implements NestMiddleware {
       const { method, originalUrl, ip } = req;
       const { statusCode } = res;
 
-      // Development-friendly log
       console.log(
         `[${new Date().toISOString()}] ${method} : ${ip} -> ${originalUrl} ${statusCode} - ${duration}ms`,
       );
 
-      // Optional: log body (for debugging only — disable in prod)
       if (
         process.env.NODE_ENV === 'development' &&
         Object.keys(req.body || {}).length > 0

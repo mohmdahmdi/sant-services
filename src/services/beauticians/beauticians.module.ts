@@ -1,4 +1,3 @@
-// beauticians.module.ts
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BeauticiansService } from './beauticians.service';

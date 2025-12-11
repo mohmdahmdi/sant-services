@@ -43,7 +43,6 @@ export class User {
   @Column({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  // Relations
   @OneToMany(() => Beautician, (beautician) => beautician.user)
   beauticians: Beautician[];
 

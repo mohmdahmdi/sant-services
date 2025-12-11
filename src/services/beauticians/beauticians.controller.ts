@@ -1,4 +1,3 @@
-// src/beauticians/beauticians.controller.ts
 import {
   Controller,
   Get,

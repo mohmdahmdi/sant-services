@@ -64,7 +64,6 @@ export class GeographicsController {
     return this.service.search(term);
   }
 
-  // geographic.controller.ts
   @Post('/in-bounds')
   findInBounds(@Body() dto: FindInBoundDto) {
     return this.service.findInBounds(

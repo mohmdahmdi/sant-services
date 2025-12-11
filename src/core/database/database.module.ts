@@ -20,7 +20,7 @@ import { Pool } from 'pg';
           });
         } catch (error) {
           console.error('Error creating database pool:', error);
-          throw error; // rethrow so return type is still Pool
+          throw error;
         }
       },
     },

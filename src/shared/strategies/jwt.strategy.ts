@@ -22,6 +22,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     identifier: string;
     roles: string[];
   }) {
-    return payload; // available as req.user
+    return payload;
   }
 }

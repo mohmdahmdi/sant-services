@@ -84,7 +84,6 @@ export class UsersService {
       throw new NotFoundException(`Role "${roleName}" not found`);
     }
 
-    // Avoid duplicates: add role only if not already present
     if (!user.roles) user.roles = [];
     const hasRole = user.roles.some((r) => r.id === role.id);
     if (hasRole) {
@@ -127,7 +126,6 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    // Handle password separately
     if (updateUserDto.passwordHash !== undefined) {
       updateUserDto.passwordHash = await bcrypt.hash(
         updateUserDto.passwordHash,
@@ -136,7 +134,6 @@ export class UsersService {
       delete updateUserDto.passwordHash;
     }
 
-    // Update non-undefined fields
     Object.assign(user, updateUserDto);
 
     try {

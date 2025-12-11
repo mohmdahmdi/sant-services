@@ -1,4 +1,3 @@
-// app.module.ts
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './services/users/users.module';
