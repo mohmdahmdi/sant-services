@@ -24,6 +24,7 @@ import { Beautician } from './services/beauticians/entities/beautician.entity';
 import { Appointment } from './services/appointments/entities/appointment.entity';
 import { UserRole } from './services/users/entities/UserRole.entity';
 import { Availability } from './services/business/entities/availabilty.entity';
+import { Review } from './services/reviews/entities/review.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -43,6 +44,7 @@ export const AppDataSource = new DataSource({
     ServiceCategory,
     Beautician,
     Appointment,
+    Review,
   ],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
   synchronize: false,

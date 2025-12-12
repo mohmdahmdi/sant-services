@@ -7,7 +7,9 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  OneToOne,
 } from 'typeorm';
+import { Review } from 'src/services/reviews/entities/review.entity';
 
 @Entity('appointments')
 export class Appointment {
@@ -52,4 +54,7 @@ export class Appointment {
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
+
+  @OneToOne(() => Review, (review) => review.appointment)
+  review: Review;
 }

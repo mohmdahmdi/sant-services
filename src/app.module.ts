@@ -21,6 +21,7 @@ import { ServiceCategory } from './services/services/entities/service-category.e
 import { Beautician } from './services/beauticians/entities/beautician.entity';
 import { Appointment } from './services/appointments/entities/appointment.entity';
 import { Location } from './services/geographics/entities/location.entity';
+import { ReviewsModule } from './services/reviews/reviews.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { Location } from './services/geographics/entities/location.entity';
     ServicesModule,
     GeographicsModule,
     ReportsModule,
+    ReviewsModule,
   ],
 })
 export class AppModule implements NestModule {
