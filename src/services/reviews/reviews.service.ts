@@ -4,10 +4,11 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { PaginatedResult } from '../../shared/types/types';
 
 @Injectable()
 export class ReviewService {
@@ -61,34 +62,90 @@ export class ReviewService {
     return this.reviewRepo.save(review);
   }
 
-  async getReviewsByBusiness(businessId: string): Promise<Review[]> {
-    return this.reviewRepo
-      .createQueryBuilder('review')
+  private addRelationsAndOrder(query: SelectQueryBuilder<Review>) {
+    return query
       .leftJoinAndSelect('review.appointment', 'appointment')
       .leftJoinAndSelect('appointment.service', 'service')
       .leftJoinAndSelect('review.customer', 'customer')
-      .where('service.business_id = :businessId', { businessId })
-      .orderBy('review.created_at', 'DESC')
-      .getMany();
+      .orderBy('review.created_at', 'DESC');
   }
 
-  async getReviewsByBeautician(beauticianId: string): Promise<Review[]> {
-    return this.reviewRepo
+  async getReviewsByBusiness(
+    businessId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResult<Review>> {
+    const query = this.reviewRepo
       .createQueryBuilder('review')
-      .leftJoinAndSelect('review.appointment', 'appointment')
-      .leftJoinAndSelect('review.customer', 'customer')
-      .where('appointment.beautician_id = :beauticianId', { beauticianId })
-      .orderBy('review.created_at', 'DESC')
-      .getMany();
+      .leftJoin('review.appointment', 'appointment')
+      .leftJoin('appointment.service', 'service')
+      .where('service.business_id = :businessId', { businessId });
+
+    this.addRelationsAndOrder(query);
+
+    const [data, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  async getReviewsByService(serviceId: string): Promise<Review[]> {
-    return this.reviewRepo
+  async getReviewsByBeautician(
+    beauticianId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResult<Review>> {
+    const query = this.reviewRepo
       .createQueryBuilder('review')
-      .leftJoinAndSelect('review.appointment', 'appointment')
-      .leftJoinAndSelect('review.customer', 'customer')
-      .where('appointment.service_id = :serviceId', { serviceId })
-      .orderBy('review.created_at', 'DESC')
-      .getMany();
+      .leftJoin('review.appointment', 'appointment')
+      .where('appointment.beautician_id = :beauticianId', { beauticianId });
+
+    this.addRelationsAndOrder(query);
+
+    const [data, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  async getReviewsByService(
+    serviceId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PaginatedResult<Review>> {
+    const query = this.reviewRepo
+      .createQueryBuilder('review')
+      .leftJoin('review.appointment', 'appointment')
+      .where('appointment.service_id = :serviceId', { serviceId });
+
+    this.addRelationsAndOrder(query);
+
+    const [data, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 }
