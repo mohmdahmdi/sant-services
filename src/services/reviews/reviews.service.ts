@@ -64,32 +64,44 @@ export class ReviewService {
 
   private addRelationsAndOrder(query: SelectQueryBuilder<Review>) {
     return query
+      .addSelect('user.full_name')
       .leftJoinAndSelect('review.appointment', 'appointment')
       .leftJoinAndSelect('appointment.service', 'service')
       .leftJoinAndSelect('review.customer', 'customer')
-      .orderBy('review.created_at', 'DESC');
+      .orderBy('review.createdAt', 'DESC');
   }
 
   async getReviewsByBusiness(
     businessId: string,
     page: number = 1,
     limit: number = 10,
-  ): Promise<PaginatedResult<Review>> {
-    const query = this.reviewRepo
+  ) {
+    const dataQuery = this.reviewRepo
       .createQueryBuilder('review')
+      .select('review.id', 'id')
+      .addSelect('review.rating', 'rating')
+      .addSelect('review.comment', 'comment')
+      .addSelect('review.created_at', 'createdAt')
+      .addSelect('customer.full_name', 'customerFullName')
+      .addSelect('service.title', 'serviceTitle')
+      .addSelect('beauticianUser.full_name', 'beauticianFullName')
+      .leftJoin('review.customer', 'customer')
       .leftJoin('review.appointment', 'appointment')
       .leftJoin('appointment.service', 'service')
-      .where('service.business_id = :businessId', { businessId });
+      .leftJoin('appointment.beautician', 'beautician')
+      .leftJoin('beautician.user', 'beauticianUser')
+      .where('service.business_id = :businessId', { businessId })
+      .orderBy('review.created_at', 'DESC')
+      .offset((page - 1) * limit)
+      .limit(limit);
 
-    this.addRelationsAndOrder(query);
+    const countQuery = dataQuery.clone();
+    const total = await countQuery.getCount();
 
-    const [data, total] = await query
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+    const results = await dataQuery.getRawMany();
 
     return {
-      data,
+      data: results,
       total,
       page,
       limit,
