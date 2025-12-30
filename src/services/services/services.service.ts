@@ -269,13 +269,15 @@ export class ServicesService {
         rating: string;
         title: string;
         is_active: boolean;
+        category_name: string;
         duration_minutes: string;
       }[]
     >(
       `
         SELECT s.description, s.image, s.price::text, s.rating::text, s.title,
-               s.is_active, s.duration_minutes::text
+               s.is_active, s.duration_minutes::text, c.name AS category_name
         FROM services s
+        JOIN servicecategories c ON c.id = s.category_id
         WHERE s.business_id = $1
         ORDER BY s.rating DESC
       `,
