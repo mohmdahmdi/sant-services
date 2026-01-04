@@ -269,13 +269,15 @@ export class ServicesService {
         rating: string;
         title: string;
         is_active: boolean;
+        category_id: string;
         category_name: string;
         duration_minutes: string;
       }[]
     >(
       `
         SELECT s.description, s.image, s.price::text, s.rating::text, s.title,
-               s.is_active, s.duration_minutes::text, c.name AS category_name
+               s.is_active, s.duration_minutes::text, c.name AS category_name,
+               s.category_id
         FROM services s
         JOIN servicecategories c ON c.id = s.category_id
         WHERE s.business_id = $1
@@ -290,6 +292,8 @@ export class ServicesService {
       price: parseFloat(row.price) || 0,
       rating: parseFloat(row.rating) || 0,
       title: row.title,
+      category_id: row.category_id,
+      category_name: row.category_name,
       is_active: row.is_active,
       duration_minutes: parseInt(row.duration_minutes, 10) || 0,
     }));
