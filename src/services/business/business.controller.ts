@@ -1,0 +1,64 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import { BusinessService } from './business.service';
+import { CreateBusinessDto } from './dto/create-business.dto';
+import { UpdateBusinessDto } from './dto/update-business.dto';
+import { BusinessByAppointmentDto } from './dto/business-by-app.dto';
+
+@Controller('business')
+export class BusinessController {
+  constructor(private readonly businessService: BusinessService) {}
+
+  @Post()
+  create(@Body() createBusinessDto: CreateBusinessDto) {
+    return this.businessService.create(createBusinessDto);
+  }
+
+  @Get()
+  findAll() {
+    return this.businessService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.businessService.findOne(id);
+  }
+
+  @Get('/userId/:id')
+  findByUserId(@Param('id') id: string) {
+    return this.businessService.findByUserId(id);
+  }
+
+  @Get('/business_type/:id')
+  getByBusinessType(@Param('id') businessTypeId: string) {
+    return this.businessService.getByBusinessType(businessTypeId);
+  }
+
+  @Post('/top-businesses-by-appointments')
+  getTopBusinessesByAppointments(@Body() dto: BusinessByAppointmentDto) {
+    return this.businessService.getTopBusinessesByAppointments(
+      dto.days || 100,
+      dto.limit || 5,
+    );
+  }
+
+  @Patch(':id')
+  update(
+    @Param('id') id: string,
+    @Body() updateBusinessDto: UpdateBusinessDto,
+  ) {
+    return this.businessService.update(id, updateBusinessDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.businessService.remove(id);
+  }
+}
