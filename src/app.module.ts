@@ -22,6 +22,9 @@ import { Beautician } from './services/beauticians/entities/beautician.entity';
 import { Appointment } from './services/appointments/entities/appointment.entity';
 import { Location } from './services/geographics/entities/location.entity';
 import { ReviewsModule } from './services/reviews/reviews.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -52,6 +55,12 @@ import { ReviewsModule } from './services/reviews/reviews.module';
     GeographicsModule,
     ReportsModule,
     ReviewsModule,
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      sortSchema: true,
+      playground: true,
+    }),
   ],
 })
 export class AppModule implements NestModule {

@@ -10,8 +10,8 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { isEmail } from 'class-validator';
 import { User } from './entities/user.entity';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserInput } from './dto/create-user.dto';
+import { UpdateUserInput } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -22,7 +22,7 @@ export class UsersService {
     private roleRepository: Repository<UserRole>,
   ) {}
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserInput) {
     const existingUser = await this.userRepository.findOne({
       where: [{ email: createUserDto.email }, { phone: createUserDto.phone }],
     });
@@ -45,7 +45,7 @@ export class UsersService {
 
   async findAll() {
     try {
-      return await this.userRepository.find();
+      return await this.userRepository.find({ relations: ['ownedBusinesses'] });
     } catch (error) {
       console.error('Database error in UsersService.findAll:', error);
       throw new InternalServerErrorException('Failed to fetch users');
@@ -100,38 +100,26 @@ export class UsersService {
     };
   }
 
-  async getUserRoles(identifier: string) {
-    let user: User | null = null;
-
-    if (isEmail(identifier)) {
-      user = await this.userRepository.findOne({
-        where: { email: identifier },
-        relations: ['roles'],
-      });
-    } else {
-      user = await this.userRepository.findOne({
-        where: { phone: identifier },
-        relations: ['roles'],
-      });
-    }
+  async getUserRoles(id: string) {
+    const user = await this.userRepository.findOne({
+      where: { id: id },
+      relations: ['roles'],
+    });
 
     if (!user) return [];
 
-    return user.roles?.map((role) => role.name) || [];
+    return user.roles?.map((role) => ({ id: role.id, name: role.name })) || [];
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserInput) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    if (updateUserDto.passwordHash !== undefined) {
-      updateUserDto.passwordHash = await bcrypt.hash(
-        updateUserDto.passwordHash,
-        10,
-      );
-      delete updateUserDto.passwordHash;
+    if (updateUserDto.password !== undefined) {
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+      delete updateUserDto.password;
     }
 
     Object.assign(user, updateUserDto);

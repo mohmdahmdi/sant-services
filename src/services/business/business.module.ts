@@ -8,6 +8,7 @@ import { Service } from '../services/entities/service.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { BusinessController } from './business.controller';
 import { Availability } from './entities/availabilty.entity';
+import { BusinessResolver } from './business.resolver';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { Availability } from './entities/availabilty.entity';
     ]),
   ],
   controllers: [BusinessController],
-  providers: [BusinessService],
+  providers: [BusinessService, BusinessResolver],
   exports: [BusinessService],
 })
 export class BusinessModule {}
